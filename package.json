@@ -1,0 +1,36 @@
+{
+  "name": "my-serverless-project",
+  "version": "1.0.0",
+  "description": "Serverless aws-nodejs-typescript template",
+  "main": "serverless.ts",
+  "scripts": {
+    "offline:start": "cross-env NODE_OPTIONS='--no-experimental-require-module' sls offline --stage dev",
+    "deploy": "cross-env sls deploy --verbose",
+    "deploy:createAuction": "cross-env sls deploy -f createAuction --verbose",
+    "doctor": "serverless doctor --verbose",
+    "remove": "cross-env sls remove --verbose"
+  },
+  "engines": {
+    "node": ">=18.0.0"
+  },
+  "dependencies": {
+    "@middy/core": "^3.4.0",
+    "@middy/http-json-body-parser": "^3.4.0"
+  },
+  "devDependencies": {
+    "@serverless/typescript": "^3.0.0",
+    "@types/aws-lambda": "^8.10.71",
+    "@types/node": "^14.14.25",
+    "cross-env": "^7.0.3",
+    "esbuild": "^0.14.11",
+    "json-schema-to-ts": "^1.5.0",
+    "serverless": "^3.0.0",
+    "serverless-esbuild": "^1.23.3",
+    "serverless-offline": "^12.0.4",
+    "ts-node": "^10.4.0",
+    "tsconfig-paths": "^3.9.0",
+    "typescript": "^4.1.3"
+  },
+  "author": "",
+  "license": "MIT"
+}
