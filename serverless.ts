@@ -19,6 +19,7 @@ const serverlessConfiguration: AWS = {
     environment: {
       AWS_NODEJS_CONNECTION_REUSE_ENABLED: '1',
       NODE_OPTIONS: '--enable-source-maps --stack-trace-limit=1000',
+      AUCTION_TABLE_NAME: '${self:custom.AuctionsTable.tableName}',
     },
     iam: {
       role: {
@@ -30,7 +31,7 @@ const serverlessConfiguration: AWS = {
   },
   resources: {
     Resources: {
-      AuctionsTableResource,
+      AuctionsTable: AuctionsTableResource,
     }
   },
   configValidationMode: 'error',
@@ -55,8 +56,13 @@ const serverlessConfiguration: AWS = {
     },
     bundle: {
       linting: false,
-    }
-
+    },
+    AuctionsTable: {
+      tableName: "AuctionsTable-${self:provider.stage}",
+      arn: {
+        "Fn::Sub": `arn:aws:dynamodb:\${AWS::Region}:\${AWS::AccountId}:table/\${self:custom.AuctionsTable.tableName}`,
+      },
+    },
   },
 };
 

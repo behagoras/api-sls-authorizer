@@ -3,8 +3,6 @@ import { DynamoDBDocumentClient, PutCommand } from "@aws-sdk/lib-dynamodb";
 import type { APIGatewayProxyEvent, APIGatewayProxyResult } from 'aws-lambda';
 import { v4 as uuid } from 'uuid';
 
-import { auctionTableName } from '@constants';
-
 export const createAuction = async (
   event: APIGatewayProxyEvent,
 ): Promise<APIGatewayProxyResult> => {
@@ -23,7 +21,7 @@ export const createAuction = async (
   };
 
   const command = new PutCommand({
-    TableName: auctionTableName,
+    TableName: process.env.AUCTION_TABLE_NAME,
     Item: auction,
   });
 

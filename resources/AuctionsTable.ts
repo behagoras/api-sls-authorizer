@@ -1,9 +1,7 @@
-import { auctionTableName } from '../src/constants';
-
 const AuctionsTableResource = {
   Type: 'AWS::DynamoDB::Table',
   Properties: {
-    TableName: auctionTableName,
+    TableName: '${self:custom.AuctionsTable.tableName}',
     BillingMode: 'PAY_PER_REQUEST',
     AttributeDefinitions: [
       {
