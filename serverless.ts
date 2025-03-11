@@ -1,7 +1,9 @@
 import type { AWS } from '@serverless/typescript';
 
-import { auctionFunctions } from '@functions/index'
-import { auctionTableName } from '@constants'
+import { AuctionsTableIam } from './iam';
+import { AuctionsTableResource } from './resources';
+
+import { auctionFunctions } from '@functions';
 
 const serverlessConfiguration: AWS = {
   service: 'auction',
@@ -21,43 +23,14 @@ const serverlessConfiguration: AWS = {
     iam: {
       role: {
         statements: [
-          {
-            Effect: 'Allow',
-            Action: [
-              's3:*',
-              'cloudformation:*',
-              'apigateway:*',
-              'dynamodb:PutItem',
-              'dynamodb:GetItem',
-              'dynamodb:*',
-            ],
-            Resource: 'arn:aws:dynamodb:us-west-2:619071311902:table/AuctionsTable',
-          }
+          AuctionsTableIam,
         ]
       },
     },
   },
   resources: {
     Resources: {
-      AuctionsTable: {
-        Type: 'AWS::DynamoDB::Table',
-        Properties: {
-          TableName: auctionTableName,
-          BillingMode: 'PAY_PER_REQUEST',
-          AttributeDefinitions: [
-            {
-              AttributeName: 'id',
-              AttributeType: 'S'
-            }
-          ],
-          KeySchema: [
-            {
-              AttributeName: 'id',
-              KeyType: 'HASH'
-            }
-          ]
-        }
-      }
+      AuctionsTableResource,
     }
   },
   configValidationMode: 'error',
