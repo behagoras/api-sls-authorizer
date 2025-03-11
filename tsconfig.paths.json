@@ -2,8 +2,12 @@
   "compilerOptions": {
     "baseUrl": ".",
     "paths": {
+      "@functions": ["src/functions/index.ts"],
       "@functions/*": ["src/functions/*"],
-      "@libs/*": ["src/libs/*"]
+      "@libs": ["src/libs/index.ts"],
+      "@libs/*": ["src/libs/*"],
+      "@constants": ["src/constants/index.ts"],
+      "@constants/*": ["src/constants/*"]
     }
   }
 }

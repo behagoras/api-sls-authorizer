@@ -1,6 +1,7 @@
 import type { AWS } from '@serverless/typescript';
 
 import { auctionFunctions } from '@functions/index'
+import { auctionTableName } from '@constants'
 
 const serverlessConfiguration: AWS = {
   service: 'auction',
@@ -26,13 +27,38 @@ const serverlessConfiguration: AWS = {
               's3:*',
               'cloudformation:*',
               'apigateway:*',
+              'dynamodb:PutItem',
+              'dynamodb:GetItem',
               'dynamodb:*',
             ],
-            Resource: '*'
+            Resource: 'arn:aws:dynamodb:us-west-2:619071311902:table/AuctionsTable',
           }
         ]
       },
     },
+  },
+  resources: {
+    Resources: {
+      AuctionsTable: {
+        Type: 'AWS::DynamoDB::Table',
+        Properties: {
+          TableName: auctionTableName,
+          BillingMode: 'PAY_PER_REQUEST',
+          AttributeDefinitions: [
+            {
+              AttributeName: 'id',
+              AttributeType: 'S'
+            }
+          ],
+          KeySchema: [
+            {
+              AttributeName: 'id',
+              KeyType: 'HASH'
+            }
+          ]
+        }
+      }
+    }
   },
   configValidationMode: 'error',
   functions: {
@@ -46,13 +72,18 @@ const serverlessConfiguration: AWS = {
       sourcemap: true,
       exclude: ['aws-sdk'],
       target: 'node18',
-      define: { 'require.resolve': undefined },
       platform: 'node',
       concurrency: 10,
+
+      external: [
+        '@aws-sdk/client-dynamodb',
+        '@aws-sdk/lib-dynamodb',
+      ],
     },
     bundle: {
       linting: false,
     }
+
   },
 };
 
