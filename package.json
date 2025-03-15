@@ -7,6 +7,7 @@
     "offline:start": "cross-env NODE_OPTIONS='--no-experimental-require-module' sls offline --stage dev",
     "deploy": "cross-env sls deploy --verbose",
     "deploy:createAuction": "cross-env sls deploy -f createAuction --verbose",
+    "deploy:getAuctions": "cross-env sls deploy -f getAuctions --verbose",
     "doctor": "serverless doctor --verbose",
     "remove": "cross-env sls remove --verbose"
   },
@@ -16,8 +17,11 @@
   "dependencies": {
     "@aws-sdk/client-dynamodb": "^3.758.0",
     "@aws-sdk/lib-dynamodb": "^3.758.0",
-    "@middy/core": "^3.4.0",
-    "@middy/http-json-body-parser": "^3.4.0",
+    "@middy/core": "^3.6.2",
+    "@middy/http-error-handler": "^5.5.1",
+    "@middy/http-event-normalizer": "^5.5.1",
+    "@middy/http-json-body-parser": "^3.6.2",
+    "http-errors": "^2.0.0",
     "uuid": "^11.1.0"
   },
   "devDependencies": {

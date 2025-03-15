@@ -1,12 +1,22 @@
 import { DynamoDBClient } from "@aws-sdk/client-dynamodb";
 import { DynamoDBDocumentClient, PutCommand } from "@aws-sdk/lib-dynamodb";
-import type { APIGatewayProxyEvent, APIGatewayProxyResult } from 'aws-lambda';
+import type { APIGatewayProxyResult } from 'aws-lambda';
 import { v4 as uuid } from 'uuid';
 
+import middy from "@middy/core";
+import httpErrorHandler from "@middy/http-error-handler";
+import httpEventNormalizer from "@middy/http-event-normalizer";
+import jsonBodyParser from "@middy/http-json-body-parser";
+import createError from "http-errors";
+
+import { APIGatewayTypedEvent } from '@types';
+import { AuctionSchema } from "./schema";
+
+
 export const createAuction = async (
-  event: APIGatewayProxyEvent,
+  event: APIGatewayTypedEvent<AuctionSchema>,
 ): Promise<APIGatewayProxyResult> => {
-  const { title } = JSON.parse(event.body);
+  const { title } = event.body;
 
   const client = new DynamoDBClient({});
   const docClient = DynamoDBDocumentClient.from(client);
@@ -25,16 +35,22 @@ export const createAuction = async (
     Item: auction,
   });
 
-  const response = await docClient.send(command);
-
-  return {
-    statusCode: 201,
-    body: JSON.stringify(
-      {
-        auction,
-        $metadata: response.$metadata
-      }),
-  };
+  try {
+    const response = await docClient.send(command);
+    return {
+      statusCode: 201,
+      body: JSON.stringify(
+        {
+          auction,
+          $metadata: response.$metadata
+        }),
+    };
+  } catch (error) {
+    throw new createError.InternalServerError(error);
+  }
 };
 
-export const main = createAuction;
+export const main = middy(createAuction)
+  .use(jsonBodyParser())
+  .use(httpEventNormalizer())
+  .use(httpErrorHandler());
