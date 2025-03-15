@@ -8,6 +8,7 @@
     "deploy": "cross-env sls deploy --verbose",
     "deploy:createAuction": "cross-env sls deploy -f createAuction --verbose",
     "deploy:getAuctions": "cross-env sls deploy -f getAuctions --verbose",
+    "deploy:getAuction": "cross-env sls deploy -f getAuction --verbose",
     "doctor": "serverless doctor --verbose",
     "remove": "cross-env sls remove --verbose"
   },
@@ -27,6 +28,7 @@
   "devDependencies": {
     "@serverless/typescript": "^3.0.0",
     "@types/aws-lambda": "^8.10.71",
+    "@types/http-errors": "^2.0.4",
     "@types/node": "^14.14.25",
     "cross-env": "^7.0.3",
     "esbuild": "^0.14.11",

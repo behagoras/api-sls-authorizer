@@ -1,7 +1,6 @@
-import { DynamoDBClient } from "@aws-sdk/client-dynamodb";
-import { DynamoDBDocumentClient, PutCommand } from "@aws-sdk/lib-dynamodb";
+import { DynamoDBClient, GetItemCommand } from "@aws-sdk/client-dynamodb";
+import { DynamoDBDocumentClient } from "@aws-sdk/lib-dynamodb";
 import type { APIGatewayProxyResult } from 'aws-lambda';
-import { v4 as uuid } from 'uuid';
 
 import middy from "@middy/core";
 import httpErrorHandler from "@middy/http-error-handler";
@@ -13,44 +12,40 @@ import { APIGatewayTypedEvent } from '@types';
 import { AuctionSchema } from "../auctionsSchema";
 
 
-export const createAuction = async (
-  event: APIGatewayTypedEvent<AuctionSchema>,
+export const getAuction = async (
+  event: APIGatewayTypedEvent<AuctionSchema, { id: string }>,
 ): Promise<APIGatewayProxyResult> => {
-  const { title } = event.body;
-
   const client = new DynamoDBClient({});
   const docClient = DynamoDBDocumentClient.from(client);
 
-  const now = new Date().toISOString();
+  const id = event.pathParameters.id;
 
-  const auction = {
-    id: uuid(),
-    title,
-    status: 'OPEN',
-    createdAt: now,
-  };
-
-  const command = new PutCommand({
+  const command = new GetItemCommand({
     TableName: process.env.AUCTION_TABLE_NAME,
-    Item: auction,
+    Key: { id: { S: id } },
   });
 
   try {
     const response = await docClient.send(command);
+
+    if (!response?.Item) {
+      throw new createError.NotFound(`Auction with ID "${id}" not found.`);
+    }
+
     return {
-      statusCode: 201,
+      statusCode: 200,
       body: JSON.stringify(
-        {
-          auction,
-          $metadata: response.$metadata
-        }),
+        { auction: response.Item }),
     };
   } catch (error) {
+    if (error && (error as any).statusCode) {
+      throw error;
+    }
     throw new createError.InternalServerError(error);
   }
 };
 
-export const main = middy(createAuction)
+export const main = middy(getAuction)
   .use(jsonBodyParser())
   .use(httpEventNormalizer())
   .use(httpErrorHandler());
