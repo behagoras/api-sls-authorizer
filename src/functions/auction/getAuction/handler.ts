@@ -1,5 +1,5 @@
-import { DynamoDBClient, GetItemCommand } from "@aws-sdk/client-dynamodb";
-import { DynamoDBDocumentClient } from "@aws-sdk/lib-dynamodb";
+import { DynamoDBClient } from "@aws-sdk/client-dynamodb";
+import { DynamoDBDocumentClient, GetCommand } from "@aws-sdk/lib-dynamodb";
 import type { APIGatewayProxyResult } from 'aws-lambda';
 
 import middy from "@middy/core";
@@ -20,22 +20,21 @@ export const getAuction = async (
 
   const id = event.pathParameters.id;
 
-  const command = new GetItemCommand({
+  const command = new GetCommand({
     TableName: process.env.AUCTION_TABLE_NAME,
-    Key: { id: { S: id } },
+    Key: { id },
   });
 
   try {
-    const response = await docClient.send(command);
+    const { Item: auction } = await docClient.send(command);
 
-    if (!response?.Item) {
+    if (!auction) {
       throw new createError.NotFound(`Auction with ID "${id}" not found.`);
     }
 
     return {
       statusCode: 200,
-      body: JSON.stringify(
-        { auction: response.Item }),
+      body: JSON.stringify({ auction }),
     };
   } catch (error) {
     if (error && (error as any).statusCode) {

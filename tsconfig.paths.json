@@ -9,7 +9,9 @@
       "@constants": ["src/constants/index.ts"],
       "@constants/*": ["src/constants/*"],
       "@types": ["src/types/index.ts"],
-      "@types/*": ["src/types/*"]
+      "@types/*": ["src/types/*"],
+      "@utils": ["src/utils/index.ts"],
+      "@utils/*": ["src/utils/*"]
     }
   }
 }

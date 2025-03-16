@@ -10,7 +10,8 @@ import jsonBodyParser from "@middy/http-json-body-parser";
 import createError from "http-errors";
 
 import { APIGatewayTypedEvent } from '@types';
-import { AuctionSchema } from "../auctionsSchema";
+import { Auction, AuctionSchema } from "../auctionsSchema";
+import { createNewAuctionItem } from '@utils';
 
 
 export const createAuction = async (
@@ -21,14 +22,8 @@ export const createAuction = async (
   const client = new DynamoDBClient({});
   const docClient = DynamoDBDocumentClient.from(client);
 
-  const now = new Date().toISOString();
-
-  const auction = {
-    id: uuid(),
-    title,
-    status: 'OPEN',
-    createdAt: now,
-  };
+  const now = new Date();
+  const auction = createNewAuctionItem(title, now);
 
   const command = new PutCommand({
     TableName: process.env.AUCTION_TABLE_NAME,
