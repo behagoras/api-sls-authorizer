@@ -19,13 +19,13 @@ export function createNewAuctionItem(
 }
 
 
-export function formatAuctionFromDynamo(item: AuctionSchema): Auction {
+export function formatAuctionFromDynamo(item: any): Auction {
   return {
-    id: item.id ?? '',
-    title: item.title,
-    status: item.status as AUCTION_STATUS,
-    createdAt: item.createdAt,
-    endingAt: item.endingAt,
+    id: item.id?.S ?? '',
+    title: item.title?.S ?? '',
+    status: (item.status?.S ?? 'OPEN') as AUCTION_STATUS,
+    createdAt: item.createdAt?.S ?? '',
+    endingAt: item.endingAt?.S ?? '',
     highestBid: {
       amount: item.highestBid?.amount ?? 0,
       bidder: item.highestBid?.bidder ?? null

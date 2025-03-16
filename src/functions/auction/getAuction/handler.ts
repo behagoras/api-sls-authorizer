@@ -1,16 +1,11 @@
 import { DynamoDBClient } from "@aws-sdk/client-dynamodb";
 import { DynamoDBDocumentClient, GetCommand } from "@aws-sdk/lib-dynamodb";
 import type { APIGatewayProxyResult } from 'aws-lambda';
-
-import middy from "@middy/core";
-import httpErrorHandler from "@middy/http-error-handler";
-import httpEventNormalizer from "@middy/http-event-normalizer";
-import jsonBodyParser from "@middy/http-json-body-parser";
 import createError from "http-errors";
 
 import { APIGatewayTypedEvent } from '@types';
+import { commonMiddleware } from "@utils";
 import { AuctionSchema } from "../auctionsSchema";
-
 
 export const getAuction = async (
   event: APIGatewayTypedEvent<AuctionSchema, { id: string }>,
@@ -44,7 +39,4 @@ export const getAuction = async (
   }
 };
 
-export const main = middy(getAuction)
-  .use(jsonBodyParser())
-  .use(httpEventNormalizer())
-  .use(httpErrorHandler());
+export const main = commonMiddleware(getAuction);
