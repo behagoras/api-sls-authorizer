@@ -4,6 +4,7 @@ const AuctionsTableIam = {
     'dynamodb:PutItem',
     'dynamodb:GetItem',
     'dynamodb:Scan',
+    'dynamodb:UpdateItem',
   ],
   Resource: '${self:custom.AuctionsTable.arn}',
 }

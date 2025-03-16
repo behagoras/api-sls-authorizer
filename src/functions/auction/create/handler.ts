@@ -8,7 +8,7 @@ import { commonMiddleware, createNewAuctionItem } from '@utils';
 import { AuctionSchema } from "../auctionsSchema";
 
 
-export const createAuction = async (
+export const placeBid = async (
   event: APIGatewayTypedEvent<AuctionSchema>,
 ): Promise<APIGatewayProxyResult> => {
   const { title } = event.body;
@@ -39,4 +39,4 @@ export const createAuction = async (
   }
 };
 
-export const main = commonMiddleware(createAuction);
+export const main = commonMiddleware(placeBid);

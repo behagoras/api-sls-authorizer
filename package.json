@@ -9,6 +9,7 @@
     "deploy:createAuction": "cross-env sls deploy -f createAuction --verbose",
     "deploy:getAuctions": "cross-env sls deploy -f getAuctions --verbose",
     "deploy:getAuction": "cross-env sls deploy -f getAuction --verbose",
+    "deploy:placeBid": "cross-env sls deploy -f placeBid --verbose",
     "doctor": "serverless doctor --verbose",
     "remove": "cross-env sls remove --verbose"
   },
