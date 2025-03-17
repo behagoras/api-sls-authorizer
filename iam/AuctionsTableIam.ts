@@ -5,8 +5,20 @@ const AuctionsTableIam = {
     'dynamodb:GetItem',
     'dynamodb:Scan',
     'dynamodb:UpdateItem',
+    'dynamodb:Query'
   ],
-  Resource: '${self:custom.AuctionsTable.arn}',
-}
+  Resource: [
+    { "Fn::GetAtt": ["AuctionsTable", "Arn"] },
+    {
+      "Fn::Join": [
+        "/",
+        [
+          { "Fn::GetAtt": ["AuctionsTable", "Arn"] },
+          "index/*"
+        ]
+      ]
+    }
+  ]
+};
 
 export default AuctionsTableIam;

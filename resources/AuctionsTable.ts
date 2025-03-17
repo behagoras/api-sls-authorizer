@@ -29,7 +29,7 @@ const AuctionsTableResource: CloudFormationResource = {
     ],
     GlobalSecondaryIndexes: [
       {
-        IndexName: 'statusAndEndingAt',
+        IndexName: 'statusAndEndDate',
         KeySchema: [
           {
             AttributeName: 'status',

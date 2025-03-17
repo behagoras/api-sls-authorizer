@@ -1,18 +1,13 @@
-import { DynamoDBClient } from "@aws-sdk/client-dynamodb";
-import { DynamoDBDocumentClient, UpdateCommand, UpdateCommandInput } from "@aws-sdk/lib-dynamodb";
-import type { APIGatewayProxyResult } from 'aws-lambda';
-import createError from "http-errors";
 
 import { APIGatewayTypedEvent } from '@types';
-import { commonMiddleware } from '@utils';
-import { getAuctionById } from "../getAuction/handler";
-
+import getEndedAuctions from "./getEndedAuctions";
 
 export const processAuctions = async (
   event: APIGatewayTypedEvent<{}, {}>,
   context,
 ): Promise<void> => {
-  console.log('Processing auctions...');
+  const auctionsToClose = await getEndedAuctions();
+  console.log(auctionsToClose);
 };
 
 export const main = processAuctions;
