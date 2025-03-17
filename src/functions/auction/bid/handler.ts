@@ -6,10 +6,12 @@ import createError from "http-errors";
 import { APIGatewayTypedEvent } from '@types';
 import { commonMiddleware } from '@utils';
 import { getAuctionById } from "../getAuction/handler";
+import { placeBidInputSchema, PlaceBidInputSchema } from "./schemas";
+import validator from "@middy/validator";
 
 
 export const placeBid = async (
-  event: APIGatewayTypedEvent<{ amount: string }, { id: string }>,
+  event: APIGatewayTypedEvent<PlaceBidInputSchema>,
 ): Promise<APIGatewayProxyResult> => {
   const { id } = event.pathParameters;
   const { amount } = event.body;
@@ -53,4 +55,13 @@ export const placeBid = async (
   };
 };
 
-export const main = commonMiddleware(placeBid);
+export const main = commonMiddleware(placeBid)
+  .use(
+    validator({
+      inputSchema: placeBidInputSchema,
+      ajvOptions: {
+        strict: false,
+        useDefaults: true,
+      }
+    })
+  );
