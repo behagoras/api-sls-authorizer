@@ -10,6 +10,10 @@
     "deploy:getAuctions": "cross-env sls deploy -f getAuctions --verbose",
     "deploy:getAuction": "cross-env sls deploy -f getAuction --verbose",
     "deploy:placeBid": "cross-env sls deploy -f placeBid --verbose",
+    "deploy:processAuctions": "cross-env sls deploy -f processAuctions --verbose",
+    "logs:processAuctions": "cross-env sls logs -f processAuctions --tail",
+    "invoke:processAuctions": "cross-env sls invoke -f processAuctions",
+    "sls": "cross-env NODE_OPTIONS='--experimental-loader=@esbuild-kit/esm-loader' sls $*",
     "doctor": "serverless doctor --verbose",
     "remove": "cross-env sls remove --verbose"
   },
@@ -19,6 +23,7 @@
   "dependencies": {
     "@aws-sdk/client-dynamodb": "^3.758.0",
     "@aws-sdk/lib-dynamodb": "^3.758.0",
+    "@esbuild-kit/esm-loader": "^2.6.5",
     "@middy/core": "^3.6.2",
     "@middy/http-error-handler": "^5.5.1",
     "@middy/http-event-normalizer": "^5.5.1",
