@@ -5,6 +5,7 @@ import createError from "http-errors";
 
 import { APIGatewayTypedEvent } from '@types';
 import { commonMiddleware } from '@utils';
+import { getAuctionById } from "../getAuction/handler";
 
 
 export const placeBid = async (
@@ -12,6 +13,12 @@ export const placeBid = async (
 ): Promise<APIGatewayProxyResult> => {
   const { id } = event.pathParameters;
   const { amount } = event.body;
+
+  const auction = await getAuctionById(id);
+
+  if (+amount <= auction.highestBid.amount) {
+    throw new createError.Forbidden(`Your bid must be higher than ${auction.highestBid.amount}!`);
+  }
 
   const params: UpdateCommandInput = {
     TableName: process.env.AUCTION_TABLE_NAME,
