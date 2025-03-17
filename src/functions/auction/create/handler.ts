@@ -1,15 +1,17 @@
 import { DynamoDBClient } from "@aws-sdk/client-dynamodb";
 import { DynamoDBDocumentClient, PutCommand } from "@aws-sdk/lib-dynamodb";
+import validator from "@middy/validator";
 import type { APIGatewayProxyResult } from 'aws-lambda';
 import createError from "http-errors";
 
 import { APIGatewayTypedEvent } from '@types';
 import { commonMiddleware, createNewAuctionItem } from '@utils';
-import { AuctionSchema } from "../auctionsSchema";
+
+import { CreateAuctionInputSchema, createAuctionInputSchema } from "./schemas";
 
 
 export const placeBid = async (
-  event: APIGatewayTypedEvent<AuctionSchema>,
+  event: APIGatewayTypedEvent<CreateAuctionInputSchema>,
 ): Promise<APIGatewayProxyResult> => {
   const { title } = event.body;
 
@@ -43,4 +45,13 @@ export const placeBid = async (
   }
 };
 
-export const main = commonMiddleware(placeBid);
+export const main = commonMiddleware(placeBid)
+  .use(
+    validator({
+      inputSchema: createAuctionInputSchema,
+      ajvOptions: {
+        strict: false,
+        useDefaults: true,
+      }
+    })
+  );

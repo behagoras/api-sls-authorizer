@@ -2,8 +2,12 @@ import { DynamoDBClient, ScanCommand, ScanCommandInput } from "@aws-sdk/client-d
 import { DynamoDBDocumentClient, QueryCommand, QueryCommandInput } from "@aws-sdk/lib-dynamodb";
 import type { APIGatewayProxyEvent, APIGatewayProxyResult } from "aws-lambda";
 import createError from "http-errors";
+import validator from "@middy/validator";
+
 
 import { commonMiddleware, formatAuctionFromDynamo } from "@utils";
+import { getAuctionsInputSchema } from "@functions/auction/getAll/schemas";
+
 
 export const getAuctions = async (
   event: APIGatewayProxyEvent
@@ -54,4 +58,11 @@ export const getAuctions = async (
   }
 };
 
-export const main = commonMiddleware(getAuctions);
+export const main = commonMiddleware(getAuctions)
+  .use(validator({
+    eventSchema: getAuctionsInputSchema,
+    ajvOptions: {
+      useDefaults: true,
+      strict: false
+    }
+  }));

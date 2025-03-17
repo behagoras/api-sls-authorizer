@@ -1,4 +1,4 @@
-import { Auction, AUCTION_STATUS } from '@functions/auction/auctionsSchema';
+import { Auction, AUCTION_STATUS } from '@types';
 import { v4 as uuid } from 'uuid';
 
 export function createNewAuctionItem(

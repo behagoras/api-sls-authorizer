@@ -1,6 +1,6 @@
-import { FromSchema } from 'json-schema-to-ts';
+import { FromSchema, JSONSchema } from 'json-schema-to-ts';
 
-const schema = {
+export const auctionSchema: JSONSchema = {
   type: 'object',
   properties: {
     id: { type: 'string' },
@@ -20,25 +20,20 @@ const schema = {
     },
   },
   required: ['name', 'lastName', 'email', 'status']
-} as const;
-
-export type AuctionSchema = FromSchema<typeof schema>;
-
-export enum AUCTION_STATUS {
-  OPEN = 'OPEN',
-  CLOSED = 'CLOSED',
-}
-
-export type Auction = {
-  id: string;
-  title: string;
-  status: AUCTION_STATUS;
-  createdAt: string;
-  endingAt: string;
-  highestBid: {
-    amount: number;
-    bidder: string | null;
-  };
 };
 
-export default schema;
+export type AuctionSchema = FromSchema<typeof auctionSchema>;
+
+export const getAuctionSchema: JSONSchema = {
+  type: 'object',
+  properties: {
+    pathParameters: {
+      type: 'object',
+      properties: {
+        id: { type: 'string' },
+      },
+      required: ['id'],
+    },
+  },
+  required: ['pathParameters'],
+};

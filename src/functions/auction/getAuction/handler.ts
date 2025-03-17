@@ -3,9 +3,10 @@ import { DynamoDBDocumentClient, GetCommand } from "@aws-sdk/lib-dynamodb";
 import type { APIGatewayProxyResult } from 'aws-lambda';
 import createError from "http-errors";
 
-import { APIGatewayTypedEvent } from '@types';
+import { APIGatewayTypedEvent, Auction } from '@types';
 import { commonMiddleware } from "@utils";
-import { Auction, AuctionSchema } from "../auctionsSchema";
+import { AuctionSchema, getAuctionSchema } from "./schemas";
+import validator from "@middy/validator";
 
 export const getAuctionById = async (id: string) => {
   const client = new DynamoDBClient({});
@@ -43,4 +44,13 @@ export const getAuction = async (
   }
 };
 
-export const main = commonMiddleware(getAuction);
+export const main = commonMiddleware(getAuction)
+  .use(
+    validator({
+      inputSchema: getAuctionSchema,
+      ajvOptions: {
+        strict: false,
+        useDefaults: true,
+      }
+    })
+  );
