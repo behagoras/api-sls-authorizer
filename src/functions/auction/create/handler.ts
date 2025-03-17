@@ -35,6 +35,7 @@ export const placeBid = async (
         }),
     };
   } catch (error) {
+    console.error(error);
     throw new createError.InternalServerError(error);
   }
 };

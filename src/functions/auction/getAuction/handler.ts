@@ -14,15 +14,13 @@ export const getAuctionById = async (id: string) => {
     TableName: process.env.AUCTION_TABLE_NAME,
     Key: { id },
   });
-  try {
-    const { Item: auction } = await docClient.send(command);
-    if (!auction) {
-      throw new createError.NotFound(`Auction with ID "${id}" not found.`);
-    }
-    return auction as Auction;
-  } catch (error) {
-    throw new createError.InternalServerError(error);
+
+  const { Item: auction } = await docClient.send(command);
+  if (!auction) {
+    console.error(`Auction with ID "${id}" not found.`);
+    throw new createError.NotFound(`Auction with ID "${id}" not found.`);
   }
+  return auction as Auction;
 };
 
 export const getAuction = async (
@@ -37,7 +35,10 @@ export const getAuction = async (
       body: JSON.stringify({ auction }),
     };
   } catch (error) {
-    if (error && (error as any).statusCode) throw error;
+    console.error(error);
+    const statusCode = (error as any)?.statusCode;
+
+    if (statusCode) throw error;
     throw new createError.InternalServerError(error);
   }
 };

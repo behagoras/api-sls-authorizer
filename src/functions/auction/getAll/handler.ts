@@ -28,6 +28,7 @@ export const getAuctions = async (
       body: JSON.stringify({ auctions: formattedAuctions }),
     };
   } catch (error) {
+    console.error(error);
     throw new createError.InternalServerError(error);
   }
 };
