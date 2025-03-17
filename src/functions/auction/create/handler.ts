@@ -17,7 +17,10 @@ export const placeBid = async (
   const docClient = DynamoDBDocumentClient.from(client);
 
   const now = new Date();
-  const auction = createNewAuctionItem(title, now);
+  const endDate = new Date();
+  endDate.setHours(now.getHours() + 1);
+
+  const auction = createNewAuctionItem(title, now, endDate);
 
   const command = new PutCommand({
     TableName: process.env.AUCTION_TABLE_NAME,

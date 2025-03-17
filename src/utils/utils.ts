@@ -3,14 +3,15 @@ import { v4 as uuid } from 'uuid';
 
 export function createNewAuctionItem(
   title: string,
-  date: Date = new Date(),
+  createdDate: Date = new Date(),
+  endingAt: Date = new Date(createdDate.getTime() + 60 * 60 * 1000)
 ): Auction {
   return {
     id: uuid(),
     title,
     status: AUCTION_STATUS.OPEN,
-    createdAt: date.toISOString(),
-    endingAt: new Date(date.getTime() + 24 * 60 * 60 * 1000).toISOString(),
+    createdAt: createdDate.toISOString(),
+    endingAt: endingAt.toISOString(),
     highestBid: {
       amount: 0,
       bidder: null
