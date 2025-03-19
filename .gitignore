@@ -16,3 +16,5 @@ jspm_packages
 .env.development
 
 output.md
+*.pkg
+*.zip
