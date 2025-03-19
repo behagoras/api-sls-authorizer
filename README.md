@@ -1,95 +1,147 @@
-# Serverless - AWS Node.js Typescript
+# Auction Service with Reusable Auth0 Authorizer
 
-This project has been generated using the `aws-nodejs-typescript` template from the [Serverless framework](https://www.serverless.com/).
+This project serves a dual purpose:
+1. A serverless auction service with complete CRUD operations
+2. A reusable Auth0 JWT Authorizer that can be shared across multiple services
 
-For detailed instructions, please refer to the [documentation](https://www.serverless.com/framework/docs/providers/aws/).
+## Features
 
-## Installation/deployment instructions
+* Complete auction service with create, bid, and process functionality
+* Reusable Auth0 JWT authorizer for API Gateway
+* TypeScript implementation with proper typing
+* DynamoDB for auction data storage
+* Cross-service authorization capability
+* Multi-environment deployment support
 
-Depending on your preferred package manager, follow the instructions below to deploy your project.
+## Quick Start
 
-> **Requirements**: NodeJS `lts/fermium (v.14.15.0)`. If you're using [nvm](https://github.com/nvm-sh/nvm), run `nvm use` to ensure you're using the same Node version in local and in your lambda's runtime.
+### 1. Install Dependencies
 
-### Using NPM
-
-- Run `npm i` to install the project dependencies
-- Run `npx sls deploy` to deploy this stack to AWS
-
-### Using Yarn
-
-- Run `yarn` to install the project dependencies
-- Run `yarn sls deploy` to deploy this stack to AWS
-
-## Test your service
-
-This template contains a single lambda function triggered by an HTTP request made on the provisioned API Gateway REST API `/hello` route with `POST` method. The request body must be provided as `application/json`. The body structure is tested by API Gateway against `src/functions/hello/schema.ts` JSON-Schema definition: it must contain the `name` property.
-
-- requesting any other path than `/hello` with any other method than `POST` will result in API Gateway returning a `403` HTTP error code
-- sending a `POST` request to `/hello` with a payload **not** containing a string property named `name` will result in API Gateway returning a `400` HTTP error code
-- sending a `POST` request to `/hello` with a payload containing a string property named `name` will result in API Gateway returning a `200` HTTP status code with a message saluting the provided name and the detailed event processed by the lambda
-
-> :warning: As is, this template, once deployed, opens a **public** endpoint within your AWS account resources. Anybody with the URL can actively execute the API Gateway endpoint and the corresponding lambda. You should protect this endpoint with the authentication method of your choice.
-
-### Locally
-
-In order to test the hello function locally, run the following command:
-
-- `npx sls invoke local -f hello --path src/functions/hello/mock.json` if you're using NPM
-- `yarn sls invoke local -f hello --path src/functions/hello/mock.json` if you're using Yarn
-
-Check the [sls invoke local command documentation](https://www.serverless.com/framework/docs/providers/aws/cli-reference/invoke-local/) for more information.
-
-### Remotely
-
-Copy and replace your `url` - found in Serverless `deploy` command output - and `name` parameter in the following `curl` command in your terminal or in Postman to test your newly deployed application.
-
-```
-curl --location --request POST 'https://myApiEndpoint/dev/hello' \
---header 'Content-Type: application/json' \
---data-raw '{
-    "name": "Frederic"
-}'
+```bash
+npm install
 ```
 
-## Template features
+### 2. Configure Auth0
 
-### Project structure
+1. Create an Auth0 account and API at [auth0.com](https://auth0.com/)
+2. Go to **APIs** > **Create API**
+   - Name: "Auction API" (or your preferred name)
+   - Identifier: Your API identifier (audience)
+   - Signing Algorithm: RS256
 
-The project code base is mainly located within the `src` folder. This folder is divided in:
+### 3. Set Environment Variables
 
-- `functions` - containing code base and configuration for your lambda functions
-- `libs` - containing shared code base between your lambdas
+Create a `.env.development` file:
+
+```
+AUTH0_DOMAIN=your-tenant.auth0.com
+AUTH0_AUDIENCE=https://your-api-identifier
+AUTH0_PUBLIC_KEY=-----BEGIN CERTIFICATE-----\n...\n-----END CERTIFICATE-----
+```
+
+Get your Auth0 public key from API settings > Signing Certificate.
+
+### 4. Deploy
+
+```bash
+# Development deployment
+npm run deploy
+
+# Production deployment
+npm run deploy:production
+```
+
+### 5. Test Protected Endpoints
+
+```bash
+# Example: Place a bid on an auction
+curl -X PATCH https://your-api-id.execute-api.region.amazonaws.com/dev/auction/123/bid \
+  -H "Authorization: Bearer YOUR_AUTH0_TOKEN" \
+  -H "Content-Type: application/json" \
+  -d '{"amount": 100}'
+```
+
+## Auction Service Endpoints
+
+| Method | Endpoint | Description | Auth Required |
+|--------|----------|-------------|--------------|
+| POST | /auction | Create a new auction | Yes |
+| GET | /auctions | Get all auctions | No |
+| GET | /auction/{id} | Get auction by ID | No |
+| PATCH | /auction/{id}/bid | Place a bid on an auction | Yes |
+
+The system also includes a scheduled function that processes ended auctions automatically.
+
+## Auth0 Authorizer
+
+The Auth0 authorizer is designed to be reused across multiple services:
+
+1. **Standalone deployment**: Deploy this project as a dedicated authorizer service
+2. **Combined deployment**: Use both auction functionality and the authorizer
+3. **Cross-reference**: Reference this authorizer from other services
+
+## Project Structure
 
 ```
 .
-├── src
-│   ├── functions               # Lambda configuration and source code folder
-│   │   ├── hello
-│   │   │   ├── handler.ts      # `Hello` lambda source code
-│   │   │   ├── index.ts        # `Hello` lambda Serverless configuration
-│   │   │   ├── mock.json       # `Hello` lambda input parameter, if any, for local invocation
-│   │   │   └── schema.ts       # `Hello` lambda input event JSON-Schema
-│   │   │
-│   │   └── index.ts            # Import/export of all lambda configurations
-│   │
-│   └── libs                    # Lambda shared code
-│       └── apiGateway.ts       # API Gateway specific helpers
-│       └── handlerResolver.ts  # Sharable library for resolving lambda handlers
-│       └── lambda.ts           # Lambda middleware
-│
-├── package.json
-├── serverless.ts               # Serverless service file
-├── tsconfig.json               # Typescript compiler configuration
-├── tsconfig.paths.json         # Typescript paths
-└── webpack.config.js           # Webpack configuration
+├── serverless.ts              # Serverless configuration
+├── src/
+│   ├── functions/
+│   │   ├── authorizer/        # Auth0 authorizer function (reusable)
+│   │   │   ├── handler.ts     # Token verification implementation
+│   │   │   └── index.ts       # Function configuration
+│   │   └── auction/           # Auction service functions
+│   │       ├── create/        # Create auction endpoint
+│   │       ├── getAll/        # Get all auctions endpoint
+│   │       ├── getAuction/    # Get single auction endpoint
+│   │       ├── bid/           # Place bid endpoint
+│   │       └── processAuctions/ # Process ended auctions
+│   └── libs/
+│       ├── authPolicy.ts      # API Gateway policy generator
+│       └── tokenVerifier.ts   # JWT verification logic
+├── resources/                 # CloudFormation resources
+└── iam/                       # IAM role definitions
 ```
 
-### 3rd party libraries
+## Protected vs Public Endpoints
 
-- [json-schema-to-ts](https://github.com/ThomasAribart/json-schema-to-ts) - uses JSON-Schema definitions used by API Gateway for HTTP request validation to statically generate TypeScript types in your lambda's handler code base
-- [middy](https://github.com/middyjs/middy) - middleware engine for Node.Js lambda. This template uses [http-json-body-parser](https://github.com/middyjs/middy/tree/master/packages/http-json-body-parser) to convert API Gateway `event.body` property, originally passed as a stringified JSON, to its corresponding parsed object
-- [@serverless/typescript](https://github.com/serverless/typescript) - provides up-to-date TypeScript definitions for your `serverless.ts` service file
+To protect an endpoint, add the authorizer to its configuration:
 
-### Advanced usage
+```typescript
+{
+  http: {
+    method: 'POST',
+    path: 'path',
+    authorizer: {
+      name: 'auth',
+      type: 'token',
+      identitySource: 'method.request.header.Authorization',
+    },
+    cors: true
+  }
+}
+```
 
-Any tsconfig.json can be used, but if you do, set the environment variable `TS_NODE_CONFIG` for building the application, eg `TS_NODE_CONFIG=./tsconfig.app.json npx serverless webpack`
+## Using The Authorizer Across Services
+
+Reference this authorizer from other services:
+
+```yaml
+authorizer: 
+  arn: arn:aws:lambda:${AWS::Region}:${AWS::AccountId}:function:auction-${self:provider.stage}-auth
+```
+
+## Troubleshooting
+
+- **401 Unauthorized**: Check token validity
+- **Missing Authentication Token**: Ensure `Authorization: Bearer YOUR_TOKEN` header is included
+- **Invalid Token**: Verify audience and domain settings match Auth0 configuration
+- **Invalid Bid**: Ensure bid amount is higher than current highest bid
+
+## License
+
+MIT
+
+---
+
+Based on [serverless/examples/aws-node-auth0-custom-authorizers-api](https://github.com/arielweinberger/serverless-auth0-authorizer) by Ariel Weinberger.

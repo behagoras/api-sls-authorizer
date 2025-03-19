@@ -7,6 +7,8 @@ export default {
       http: {
         method: 'POST',
         path: 'auction',
+        authorizer: 'auth',
+        cors: true,
       },
     },
   ],

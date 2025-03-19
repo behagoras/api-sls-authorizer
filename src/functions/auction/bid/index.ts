@@ -7,6 +7,12 @@ export default {
       http: {
         method: 'PATCH',
         path: 'auction/{id}/bid',
+        authorizer: {
+          name: 'auth',
+          type: 'token',
+          identitySource: 'method.request.header.Authorization',
+        },
+        cors: true,
       },
     },
   ],
