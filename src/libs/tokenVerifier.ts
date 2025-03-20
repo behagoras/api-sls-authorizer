@@ -81,20 +81,19 @@ export const verifyToken = async (token: string): Promise<DecodedToken> => {
     
     const decodedWithHeader = decoded as DecodedJwtWithHeader;
     
-    console.log('Token header:', JSON.stringify(decodedWithHeader.header));
-    console.log('Token payload audience:', JSON.stringify(decodedWithHeader.payload.aud));
+    // Only log non-sensitive information about the token
+    console.log('Token validation initiated for token issued to subject with ID ending in:', 
+      decodedWithHeader.payload.sub ? `...${decodedWithHeader.payload.sub.slice(-6)}` : 'unknown');
     
-    // Verify the token with audience check that handles arrays
+    // Verify the token with proper audience check
     const decodedToken = await verifyPromise(token, cert, {
-      // Don't strictly check audience during development
-      // Auth0 might return an array of audiences while our config has just one
-      // We want to allow all tokens with our audience in the audience array
-      audience: undefined,  // Skip audience verification at the JWT level
+      // Enable proper audience validation
+      audience: AUTH0_AUDIENCE,
       issuer: `https://${AUTH0_DOMAIN}/`,
       algorithms: ['RS256'],
     });
     
-    // Manual audience check that works with arrays
+    // Manual audience check only if needed for arrays
     const tokenAud = decodedToken.aud;
     const expectedAud = AUTH0_AUDIENCE;
     
@@ -102,16 +101,13 @@ export const verifyToken = async (token: string): Promise<DecodedToken> => {
       ? tokenAud.includes(expectedAud)
       : tokenAud === expectedAud;
     
-    // Audience validation can be relaxed during development
-    // if (!audIsValid) {
-    //   console.warn(`Token audience ${tokenAud} doesn't match expected ${expectedAud}, but proceeding anyway`);
-    // }
+    if (!audIsValid) {
+      throw new Error('Token audience validation failed');
+    }
     
-    console.log('Token verified successfully:', {
-      sub: decodedToken.sub,
-      scope: decodedToken.scope,
-      exp: new Date(decodedToken.exp * 1000).toISOString()
-    });
+    // Log minimal information
+    console.log('Token verified successfully for user ID ending in:', 
+      decodedToken.sub ? `...${decodedToken.sub.slice(-6)}` : 'unknown');
     
     return decodedToken;
   } catch (error) {
