@@ -1,12 +1,13 @@
 import * as jwt from 'jsonwebtoken';
 import { promisify } from 'util';
+import { Auth0DecodedToken } from '@types';
 
 // Configure Auth0 environment variables
 const AUTH0_DOMAIN = process.env.AUTH0_DOMAIN || '';
 const AUTH0_AUDIENCE = process.env.AUTH0_AUDIENCE || '';
 
 // Promisify jsonwebtoken verify function with the correct type
-const verifyPromise = promisify<string, string, jwt.VerifyOptions, any>(jwt.verify);
+const verifyPromise = promisify<string, string, jwt.VerifyOptions, Auth0DecodedToken>(jwt.verify);
 
 // Format the certificate by replacing \n with actual newlines
 const formatCertificate = (cert: string): string => {
@@ -19,8 +20,23 @@ const formatCertificate = (cert: string): string => {
   return cert.replace(/\\n/g, '\n');
 };
 
+// Extract user permissions from token scopes
+const extractPermissions = (decodedToken: Auth0DecodedToken): string[] => {
+  // If token has permissions claim, use it
+  if (decodedToken.permissions && Array.isArray(decodedToken.permissions)) {
+    return decodedToken.permissions;
+  }
+  
+  // Otherwise, try to extract from scope
+  if (decodedToken.scope) {
+    return decodedToken.scope.split(' ');
+  }
+  
+  return [];
+};
+
 // Verify JWT token from Auth0
-export const verifyToken = async (token: string): Promise<any> => {
+export const verifyToken = async (token: string): Promise<Auth0DecodedToken> => {
   try {
     if (!token) {
       throw new Error('No token provided');
@@ -48,4 +64,16 @@ export const verifyToken = async (token: string): Promise<any> => {
     console.error('Token verification failed:', error);
     throw new Error('Unauthorized');
   }
+};
+
+// Convert a decoded token to user info
+export const getUserInfoFromToken = (decodedToken: Auth0DecodedToken) => {
+  const permissions = extractPermissions(decodedToken);
+  const scopes = decodedToken.scope ? decodedToken.scope.split(' ') : [];
+  
+  return {
+    userId: decodedToken.sub,
+    permissions,
+    scopes,
+  };
 }; 

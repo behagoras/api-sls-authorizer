@@ -1,6 +1,20 @@
 import { APIGatewayAuthorizerResult } from 'aws-lambda';
 
 /**
+ * HTTP verb enum for use with AuthPolicy methods
+ */
+export enum HttpVerb {
+  GET = 'GET',
+  POST = 'POST',
+  PUT = 'PUT',
+  PATCH = 'PATCH',
+  HEAD = 'HEAD',
+  DELETE = 'DELETE',
+  OPTIONS = 'OPTIONS',
+  ALL = '*'
+}
+
+/**
  * AuthPolicy receives a set of allowed and denied methods and generates a valid
  * AWS policy for the API Gateway authorizer. The constructor receives the principal id
  * (user identifier) and the API options (region, account id, api id, and stage).
@@ -12,11 +26,14 @@ export class AuthPolicy {
   private readonly principalId: string;
   private readonly version: string;
   private readonly pathRegex: RegExp;
-  private readonly allowMethods: any[];
+  public readonly allowMethods: any[];
   private readonly denyMethods: any[];
   private readonly restApiId: string;
   private readonly region: string;
   private readonly stage: string;
+  
+  // Static reference to HttpVerb enum for external use
+  static HttpVerb = HttpVerb;
 
   constructor(principal: string, awsAccountId: string, apiOptions: any) {
     this.principalId = principal;
@@ -49,7 +66,7 @@ export class AuthPolicy {
    * Adds a method to the internal lists of allowed or denied methods.
    */
   private addMethod(effect: string, verb: string, resource: string, conditions?: any): void {
-    if (verb !== '*' && !['GET', 'POST', 'PUT', 'DELETE', 'PATCH', 'HEAD', 'OPTIONS'].includes(verb)) {
+    if (verb !== '*' && !Object.values(HttpVerb).includes(verb as HttpVerb)) {
       throw new Error(`Invalid HTTP verb ${verb}. Allowed verbs are '*', 'GET', 'POST', 'PUT', 'DELETE', 'PATCH', 'HEAD', and 'OPTIONS'.`);
     }
 
@@ -102,7 +119,6 @@ export class AuthPolicy {
         if (method.conditions) {
           throw new Error('Conditions are not supported');
         }
-
         statement.Resource.push(method.resourceArn);
       }
 
@@ -113,38 +129,39 @@ export class AuthPolicy {
   }
 
   /**
-   * Adds an allow "*" statement to the policy.
+   * Adds an allow '*' statement to the policy.
    */
   public allowAllMethods(): void {
     this.addMethod('Allow', '*', '*');
   }
 
   /**
-   * Adds a deny "*" statement to the policy.
+   * Adds a deny '*' statement to the policy.
    */
   public denyAllMethods(): void {
     this.addMethod('Deny', '*', '*');
   }
 
   /**
-   * Adds an API Gateway method (http verb + resource path) to the list of allowed
+   * Adds an API Gateway method (Http verb + Resource path) to the list of allowed
    * methods for the policy.
    */
-  public allowMethod(verb: string, resource: string): void {
+  public allowMethod(verb: HttpVerb, resource: string): void {
     this.addMethod('Allow', verb, resource);
   }
 
   /**
-   * Adds an API Gateway method (http verb + resource path) to the list of denied
+   * Adds an API Gateway method (Http verb + Resource path) to the list of denied
    * methods for the policy.
    */
-  public denyMethod(verb: string, resource: string): void {
+  public denyMethod(verb: HttpVerb, resource: string): void {
     this.addMethod('Deny', verb, resource);
   }
 
   /**
    * Generates the policy document based on the internal lists of allowed and denied
-   * methods.
+   * methods. This will generate a policy with two main statements for the effect:
+   * one statement for Allow and one statement for Deny.
    */
   public build(): APIGatewayAuthorizerResult {
     if ((!this.allowMethods || this.allowMethods.length === 0) &&
