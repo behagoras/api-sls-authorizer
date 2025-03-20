@@ -19,13 +19,15 @@ This project provides a reusable API Gateway authorizer for API authentication u
 
 ## Environment Variables
 
-Copy `.env.example` to `.env.development` and fill in your Auth0 credentials:
+Copy `.env.development.example` to `.env.development` and fill in your Auth0 credentials:
 
 ```
 AUTH0_DOMAIN=your-auth0-domain.auth0.com
 AUTH0_AUDIENCE=your-api-identifier
 AUTH0_PUBLIC_KEY=your-auth0-public-key
 ```
+
+⚠️ **Security Note**: NEVER commit `.env.development` or other environment files with real credentials to the repository. These files are listed in `.gitignore` and should remain only on your local development environment.
 
 ## Deployment
 
