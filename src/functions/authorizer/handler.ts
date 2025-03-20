@@ -1,47 +1,10 @@
 import { APIGatewayTokenAuthorizerEvent, APIGatewayAuthorizerResult } from 'aws-lambda';
-import { AuthPolicy } from '@libs/authPolicy';
-import { verifyToken, getUserInfoFromToken } from '@libs/tokenVerifier';
-import { Permission } from '@types';
+import { verifyToken } from '@libs/tokenVerifier';
+import { createPolicyBuilder } from '@utils/policyBuilder';
 
 /**
- * Determines which API Gateway resources the user should have access to
- * based on their permissions in the Auth0 token
+ * Lambda authorizer that verifies Auth0 tokens and generates appropriate policies
  */
-const buildPolicyForUser = (userId: string, methodArn: string, permissions: string[]): AuthPolicy => {
-  // Extract the API ID, stage, and region from the methodArn
-  const arnParts = methodArn.split(':');
-  const awsAccountId = arnParts[4];
-  
-  // Create a new policy for this user
-  const policy = new AuthPolicy(userId, awsAccountId, {
-    region: arnParts[3],
-    restApiId: arnParts[5].split('/')[0],
-    stage: arnParts[5].split('/')[1]
-  });
-  
-  // Set permissions based on the user's scopes/permissions from Auth0
-  if (permissions.includes(Permission.ReadAuctions)) {
-    policy.allowMethod(AuthPolicy.HttpVerb.GET, '/auctions');
-    policy.allowMethod(AuthPolicy.HttpVerb.GET, '/auction/*');
-  }
-  
-  if (permissions.includes(Permission.CreateAuctions)) {
-    policy.allowMethod(AuthPolicy.HttpVerb.POST, '/auction');
-  }
-  
-  if (permissions.includes(Permission.PlaceBids)) {
-    policy.allowMethod(AuthPolicy.HttpVerb.PATCH, '/auction/*/bid');
-  }
-  
-  // If no specific permissions match, provide minimal access
-  // This is needed for the Authorization test endpoint
-  if (policy.allowMethods.length === 0) {
-    policy.allowMethod(AuthPolicy.HttpVerb.GET, '/hello');
-  }
-  
-  return policy;
-};
-
 export const handler = async (event: APIGatewayTokenAuthorizerEvent): Promise<APIGatewayAuthorizerResult> => {
   try {
     if (!event.authorizationToken) {
@@ -53,23 +16,26 @@ export const handler = async (event: APIGatewayTokenAuthorizerEvent): Promise<AP
     
     // Verify the token and get the user information
     const decodedToken = await verifyToken(token);
-    const userInfo = getUserInfoFromToken(decodedToken);
     
-    // For development, log the permissions (remove in production)
-    console.log('User permissions:', userInfo.permissions);
+    // Extract scopes from the token (if present)
+    const scopes = decodedToken.scope?.split(' ') || [];
     
-    // Generate a policy document based on the user's permissions
-    const policy = buildPolicyForUser(userInfo.userId, event.methodArn, userInfo.permissions);
+    console.log('Authorizing user:', decodedToken.sub);
+    console.log('Resource:', event.methodArn);
+    console.log('Scopes:', scopes);
     
-    // Build the final response with context
-    const response = policy.build();
+    // Create a policy using the chainable PolicyBuilder
+    const policyBuilder = createPolicyBuilder(decodedToken.sub, event.methodArn);
     
-    // Add custom context attributes to be accessible in the Lambda functions
-    response.context = {
-      userId: userInfo.userId,
-      scope: decodedToken.scope || '',
-      email: decodedToken.email,
-    };
+    // Allow all methods for now since we have a valid token
+    const response = policyBuilder
+      .allowAll()
+      .buildWithContext({
+        userId: decodedToken.sub,
+        scope: decodedToken.scope || '',
+        email: decodedToken.email || '',
+        name: decodedToken.name || '',
+      });
     
     return response;
   } catch (error) {

@@ -6,15 +6,9 @@
   "scripts": {
     "offline:start": "cross-env NODE_OPTIONS='--no-experimental-require-module' sls offline --stage dev",
     "deploy": "cross-env sls deploy --verbose",
-    "deploy:production": "cross-env sls deploy --stage production --verbose",
     "deploy:auth": "cross-env sls deploy -f auth --verbose",
-    "deploy:createAuction": "cross-env sls deploy -f createAuction --verbose",
-    "deploy:getAuctions": "cross-env sls deploy -f getAuctions --verbose",
-    "deploy:getAuction": "cross-env sls deploy -f getAuction --verbose",
-    "deploy:placeBid": "cross-env sls deploy -f placeBid --verbose",
-    "deploy:processAuctions": "cross-env sls deploy -f processAuctions --verbose",
-    "logs:processAuctions": "cross-env sls logs -f processAuctions --tail",
-    "invoke:processAuctions": "cross-env sls invoke -f processAuctions",
+    "deploy:private": "cross-env sls deploy -f privateGet --verbose",
+    "deploy:public": "cross-env sls deploy -f publicGet --verbose",
     "sls": "cross-env NODE_OPTIONS='--experimental-loader=@esbuild-kit/esm-loader' sls $*",
     "doctor": "serverless doctor --verbose",
     "remove": "cross-env sls remove --verbose"

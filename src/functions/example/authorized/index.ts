@@ -5,8 +5,8 @@ export default {
   events: [
     {
       http: {
-        method: 'PATCH',
-        path: 'auction/{id}/bid',
+        method: 'GET',
+        path: 'private',
         authorizer: {
           name: 'auth',
           type: 'token',

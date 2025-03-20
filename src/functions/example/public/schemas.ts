@@ -37,3 +37,13 @@ export const getAuctionSchema: JSONSchema = {
   },
   required: ['pathParameters'],
 };
+
+// We don't need complex schemas for our example endpoints
+export const publicRequestSchema: JSONSchema = {
+  type: 'object',
+  properties: {
+    // No specific properties required for the public endpoint
+  },
+};
+
+export type PublicRequestSchema = FromSchema<typeof publicRequestSchema>;

@@ -1,4 +1,3 @@
-import { default as AuctionsTableResource } from './AuctionsTable';
 import { 
   GatewayResponseDefault4XX, 
   GatewayResponseExpiredToken, 
@@ -6,7 +5,6 @@ import {
 } from './GatewayResponses';
 
 const resources = {
-  AuctionsTableResource,
   GatewayResponseDefault4XX,
   GatewayResponseExpiredToken,
   GatewayResponseUnauthorized,
@@ -14,7 +12,6 @@ const resources = {
 
 export default resources;
 export { 
-  AuctionsTableResource,
   GatewayResponseDefault4XX,
   GatewayResponseExpiredToken,
   GatewayResponseUnauthorized,

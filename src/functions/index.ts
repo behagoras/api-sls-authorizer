@@ -1,2 +1,2 @@
-export { default as auctionFunctions } from './auction';
+export { default as exampleFunctions } from './example';
 export { default as authorizerFunctions } from './authorizer';
