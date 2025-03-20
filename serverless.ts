@@ -27,12 +27,18 @@ const getRegion = (): AWSRegion => {
     : 'us-west-2'; // Default to us-west-2 if not valid
 };
 
+// Get profile based on environment - use psychologist for development
+const getProfile = (): string => {
+  console.log("🚀 ~ getProfile ~ AWS_PROFILE from env:", process.env.AWS_PROFILE);
+  return process.env.AWS_PROFILE || 'default';
+};
+
 const serverlessConfiguration: AWS = {
   service: 'api-authorizer',
   frameworkVersion: '3',
   plugins: ['serverless-esbuild'],
   provider: {
-    profile: process.env.AWS_PROFILE || 'default', // Use environment variable for AWS profile
+    profile: getProfile(), // Use psychologist for dev, env variable for prod
     name: 'aws',
     runtime: 'nodejs18.x',
     region: getRegion(),
