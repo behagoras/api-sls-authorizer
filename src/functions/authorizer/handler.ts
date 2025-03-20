@@ -11,6 +11,11 @@ export const handler = async (event: APIGatewayTokenAuthorizerEvent): Promise<AP
       throw new Error('Unauthorized: No authorization token was found');
     }
 
+    // Ensure token starts with Bearer prefix
+    if (!event.authorizationToken.startsWith('Bearer ')) {
+      throw new Error('Unauthorized: Invalid token format');
+    }
+
     // The token is in the format 'Bearer xxxxxx', so we need to extract the token part
     const token = event.authorizationToken.substring(7);
     
@@ -20,9 +25,10 @@ export const handler = async (event: APIGatewayTokenAuthorizerEvent): Promise<AP
     // Extract scopes from the token (if present)
     const scopes = decodedToken.scope?.split(' ') || [];
     
-    console.log('Authorizing user:', decodedToken.sub);
-    console.log('Resource:', event.methodArn);
-    console.log('Scopes:', scopes);
+    // Log minimal information - just enough for troubleshooting without exposing sensitive data
+    console.log('Authorizing user ID ending in:', decodedToken.sub ? `...${decodedToken.sub.slice(-6)}` : 'unknown');
+    console.log('Resource type:', event.methodArn.split(':').slice(-1)[0]);
+    console.log('Number of scopes:', scopes.length);
     
     // Create a policy using the chainable PolicyBuilder
     const policyBuilder = createPolicyBuilder(decodedToken.sub, event.methodArn);
@@ -39,7 +45,10 @@ export const handler = async (event: APIGatewayTokenAuthorizerEvent): Promise<AP
     
     return response;
   } catch (error) {
-    console.error('Authorization error:', error);
+    // Log error without exposing sensitive details
+    console.error('Authorization error:', error.name, error.message);
+    
+    // Don't expose internal error details in the thrown error
     throw new Error('Unauthorized');
   }
 }; 

@@ -13,15 +13,29 @@ import {
 
 import { authorizerFunctions, exampleFunctions } from '@functions';
 
+// Define AWS regions as a type
+type AWSRegion = 'us-west-2' | 'us-east-1' | 'us-east-2' | 'us-west-1' | 'eu-west-1' | 'eu-west-2' | 'eu-central-1' | 'ap-northeast-1';
+
+// Get region with type safety
+const getRegion = (): AWSRegion => {
+  const configuredRegion = process.env.AWS_REGION || 'us-west-2';
+  // Validate region is one we support
+  const validRegions: AWSRegion[] = ['us-west-2', 'us-east-1', 'us-east-2', 'us-west-1', 'eu-west-1', 'eu-west-2', 'eu-central-1', 'ap-northeast-1'];
+  
+  return validRegions.includes(configuredRegion as AWSRegion) 
+    ? configuredRegion as AWSRegion
+    : 'us-west-2'; // Default to us-west-2 if not valid
+};
+
 const serverlessConfiguration: AWS = {
   service: 'api-authorizer',
   frameworkVersion: '3',
   plugins: ['serverless-esbuild'],
   provider: {
-    profile: 'psychologist', // aws profile:
+    profile: process.env.AWS_PROFILE || 'default', // Use environment variable for AWS profile
     name: 'aws',
     runtime: 'nodejs18.x',
-    region: 'us-west-2',
+    region: getRegion(),
     memorySize: 256,
     stage: '${opt:stage, "dev"}',
     environment: {
@@ -32,6 +46,28 @@ const serverlessConfiguration: AWS = {
       AUTH0_AUDIENCE: process.env.AUTH0_AUDIENCE || '',
       AUTH0_PUBLIC_KEY: process.env.AUTH0_PUBLIC_KEY || '',
     },
+    // Add logging configuration to prevent sensitive data logging
+    logRetentionInDays: 14, // Shorter retention for logs with potential sensitive info
+    tracing: {
+      apiGateway: true,
+      lambda: true,
+    },
+    // Add IAM statement for least privilege
+    iam: {
+      role: {
+        statements: [
+          {
+            Effect: 'Allow',
+            Action: [
+              'logs:CreateLogGroup',
+              'logs:CreateLogStream',
+              'logs:PutLogEvents'
+            ],
+            Resource: 'arn:aws:logs:*:*:*'
+          }
+        ]
+      }
+    }
   },
   resources: {
     Resources: {
