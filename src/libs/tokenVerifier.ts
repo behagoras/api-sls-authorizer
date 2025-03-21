@@ -1,5 +1,6 @@
 import * as jwt from 'jsonwebtoken';
 import { promisify } from 'util';
+import https from 'https';
 
 /**
  * Represents the expected structure of a decoded Auth0 JWT token
@@ -52,6 +53,94 @@ const formatCertificate = (cert: string): string => {
 };
 
 /**
+ * Fetches user information from Auth0 userinfo endpoint using the access token
+ */
+const fetchUserInfo = async (token: string): Promise<any> => {
+  const AUTH0_DOMAIN = process.env.AUTH0_DOMAIN || '';
+  
+  if (!AUTH0_DOMAIN) {
+    throw new Error('Missing AUTH0_DOMAIN environment variable');
+  }
+  
+  return new Promise((resolve, reject) => {
+    const options = {
+      hostname: AUTH0_DOMAIN,
+      port: 443,
+      path: '/userinfo',
+      method: 'GET',
+      headers: {
+        'Authorization': `Bearer ${token}`,
+        'Content-Type': 'application/json'
+      }
+    };
+    
+    const req = https.request(options, (res) => {
+      let data = '';
+      
+      res.on('data', (chunk) => {
+        data += chunk;
+      });
+      
+      res.on('end', () => {
+        if (res.statusCode === 200) {
+          try {
+            const userInfo = JSON.parse(data);
+            console.log('Successfully fetched user info from Auth0');
+            resolve(userInfo);
+          } catch (err) {
+            reject(new Error('Failed to parse userinfo response'));
+          }
+        } else {
+          reject(new Error(`Failed to fetch userinfo: ${res.statusCode}`));
+        }
+      });
+    });
+    
+    req.on('error', (error) => {
+      console.error('Error fetching userinfo:', error);
+      reject(error);
+    });
+    
+    req.end();
+  });
+};
+
+/**
+ * Extract user profile info (email, name) from token or userinfo endpoint
+ * This centralizes all the profile extraction logic in one place
+ */
+const extractUserProfileInfo = async (
+  decodedToken: DecodedToken, 
+  token: string
+): Promise<void> => {
+  // DIRECT APPROACH: Get user info from Auth0 userinfo endpoint
+  try {
+    console.log('Getting user profile from Auth0 userinfo endpoint');
+    const userInfo = await fetchUserInfo(token);
+    
+    if (userInfo.email) {
+      decodedToken.email = userInfo.email;
+    }
+    
+    if (userInfo.name) {
+      decodedToken.name = userInfo.name;
+    }
+    
+    // Use email as name if name is missing but email is present
+    if (!decodedToken.name && decodedToken.email) {
+      decodedToken.name = decodedToken.email;
+    }
+    
+    console.log('User profile from userinfo endpoint:', {
+      emailFound: !!decodedToken.email,
+      nameFound: !!decodedToken.name
+    });
+  } catch (error) {
+    console.log('Failed to get user info from Auth0:', error.message);
+  }
+};
+
+/**
  * Verify a JWT token from Auth0
  * 
  * @param token JWT token to verify
@@ -92,6 +181,9 @@ export const verifyToken = async (token: string): Promise<DecodedToken> => {
       issuer: `https://${AUTH0_DOMAIN}/`,
       algorithms: ['RS256'],
     });
+    
+    // Get user profile information from Auth0 userinfo endpoint
+    await extractUserProfileInfo(decodedToken, token);
     
     // Manual audience check only if needed for arrays
     const tokenAud = decodedToken.aud;

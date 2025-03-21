@@ -18,7 +18,7 @@ export const handler = async (event: APIGatewayTokenAuthorizerEvent): Promise<AP
 
     // The token is in the format 'Bearer xxxxxx', so we need to extract the token part
     const token = event.authorizationToken.substring(7);
-    
+
     // Verify the token and get the user information
     const decodedToken = await verifyToken(token);
     
@@ -43,6 +43,7 @@ export const handler = async (event: APIGatewayTokenAuthorizerEvent): Promise<AP
         name: decodedToken.name || '',
       });
     
+    console.log("🚀 ~ handler ~ response:", response)
     return response;
   } catch (error) {
     // Log error without exposing sensitive details
